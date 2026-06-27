@@ -1,0 +1,61 @@
+---
+name: Run tests
+on:
+  pull_request: ~
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  # renovate: datasource=git-refs-master packageName=https://github.com/neovim/neovim
+  NEOVIM_NIGHTLY_COMMIT: d72e91a0b672b5c13eb76440585d0d5d9a8a5e3d
+
+jobs:
+  # Build the pinned Neovim nightly once (cached by commit) and publish it as an
+  # artifact, instead of rebuilding it in every matrix job on a cache miss.
+  build-nightly:
+    name: Build pinned Neovim nightly
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Build pinned Neovim nightly
+        uses: ./.github/actions/build-nightly
+        id: build
+        with:
+          commit: ${{ env.NEOVIM_NIGHTLY_COMMIT }}
+      - name: Verify Neovim nightly build is available at the output prefix
+        run: |
+          "${STEPS_BUILD_OUTPUTS_PREFIX}/bin/nvim" --version
+        env:
+          STEPS_BUILD_OUTPUTS_PREFIX: ${{ steps.build.outputs.prefix }}
+      - name: Verify Neovim nightly was added to PATH
+        run: nvim --version || (echo "nvim not found in PATH" && exit 1)
+
+  restore-nightly:
+    name: Restore previously built Neovim nightly
+    runs-on: ubuntu-24.04
+    needs: build-nightly
+    permissions:
+      contents: read
+    outputs:
+      prefix: ${{ steps.restore.outputs.prefix }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Restore pinned Neovim nightly
+        id: restore
+        uses: ./.github/actions/restore-nightly
+        with:
+          commit: ${{ env.NEOVIM_NIGHTLY_COMMIT }}
+      - name: Show Neovim version
+        run: nvim --version
+        env:
+          STEPS_RESTORE_OUTPUTS_PREFIX: ${{ steps.restore.outputs.prefix }}

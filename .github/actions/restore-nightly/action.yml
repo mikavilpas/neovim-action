@@ -56,3 +56,10 @@ runs:
             exit 1
           }
         fi
+
+    - name: Add Neovim nightly to PATH
+      shell: bash
+      env:
+        NEOVIM_PREFIX: ${{ steps.config.outputs.prefix }}
+      run: | # zizmor: ignore[github-env]
+        echo "$NEOVIM_PREFIX/bin/" >> "$GITHUB_PATH"
