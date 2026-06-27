@@ -19,8 +19,7 @@ description: >-
 
 inputs:
   commit:
-    description:
-      "The https://github.com/neovim/neovim commit (on the master branch) to
+    description: "The https://github.com/neovim/neovim commit (on the master branch) to
       build."
     required: true
   artifact-name:
@@ -48,8 +47,7 @@ runs:
         path: ${{ steps.config.outputs.prefix }}
         # No restore-keys: only an exact commit match is allowed, otherwise a
         # stale build would silently defeat the pin.
-        key:
-          neovim-nightly-${{ runner.os }}-${{ runner.arch }}-${{ inputs.commit
+        key: neovim-nightly-${{ runner.os }}-${{ runner.arch }}-${{ inputs.commit
           }}
 
     - name: Build Neovim nightly from source

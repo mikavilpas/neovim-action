@@ -11,8 +11,7 @@ inputs:
     required: false
     default: neovim-nightly
   commit:
-    description:
-      "The expected https://github.com/neovim/neovim commit. When set, the
+    description: "The expected https://github.com/neovim/neovim commit. When set, the
       extracted Neovim is asserted to report this commit, so a mismatched or
       stale artifact fails loudly instead of being tested silently."
     required: false
