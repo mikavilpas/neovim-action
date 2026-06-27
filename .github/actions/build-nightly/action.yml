@@ -77,6 +77,13 @@ runs:
           CMAKE_INSTALL_PREFIX="$NEOVIM_PREFIX"
         make install
 
+    - name: Add Neovim nightly to PATH
+      shell: bash
+      env:
+        NEOVIM_PREFIX: ${{ steps.config.outputs.prefix }}
+      run: | # zizmor: ignore[github-env]
+        echo "$NEOVIM_PREFIX/bin/" >> "$GITHUB_PATH"
+
     - name: Verify the pinned Neovim nightly
       shell: bash
       env:
