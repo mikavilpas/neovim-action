@@ -11,10 +11,10 @@ inputs:
     required: false
     default: neovim-nightly
   commit:
-    description: "The expected https://github.com/neovim/neovim commit. When set, the
+    description: "The expected https://github.com/neovim/neovim commit. The
       extracted Neovim is asserted to report this commit, so a mismatched or
       stale artifact fails loudly instead of being tested silently."
-    required: false
+    required: true
 
 outputs:
   prefix:
@@ -45,16 +45,13 @@ runs:
         tar -xzf "${{ runner.temp }}/neovim-nightly-artifact/neovim-nightly.tar.gz" -C "$NEOVIM_PREFIX"
         "$NEOVIM_PREFIX/bin/nvim" --version
 
-        # When a commit is given, assert the extracted Neovim reports it, so a
-        # mismatched or stale artifact fails loudly instead of being tested
-        # silently.
-        if [ -n "$NEOVIM_COMMIT" ]; then
-          short="$(printf '%s' "$NEOVIM_COMMIT" | cut -c1-7)"
-          "$NEOVIM_PREFIX/bin/nvim" --version | grep --quiet "$short" || {
-            echo "Extracted Neovim does not report the expected commit $NEOVIM_COMMIT (looked for $short)"
-            exit 1
-          }
-        fi
+        # Assert the extracted Neovim matches the given commit, so a mismatched
+        # or stale artifact fails loudly instead of being tested silently.
+        short="$(printf '%s' "$NEOVIM_COMMIT" | cut -c1-7)"
+        "$NEOVIM_PREFIX/bin/nvim" --version | grep --quiet "$short" || {
+          echo "Extracted Neovim does not report the expected commit $NEOVIM_COMMIT (looked for $short)"
+          exit 1
+        }
 
     - name: Add Neovim nightly to PATH
       shell: bash
