@@ -47,6 +47,13 @@ jobs:
             exit 1
           fi
 
+          # Verify that the restored Neovim nightly matches the pinned commit
+          short="$(printf '%s' "${{ env.NEOVIM_NIGHTLY_COMMIT }}" | cut -c1-7)"
+          if [[ "${STEPS_BUILD_OUTPUTS_SHORT_COMMIT}" != "$short" ]]; then
+            echo "Restored Neovim nightly does not match the pinned commit. Expected: $short, Got: ${STEPS_BUILD_OUTPUTS_SHORT_COMMIT}"
+            exit 1
+          fi
+
   restore-nightly:
     name: Restore previously built Neovim nightly
     runs-on: ubuntu-24.04
