@@ -68,3 +68,19 @@ jobs:
         run: nvim --version
         env:
           STEPS_RESTORE_OUTPUTS_PREFIX: ${{ steps.restore.outputs.prefix }}
+      - name: Verify Neovim nightly short commit id was output
+        env:
+          STEPS_BUILD_OUTPUTS_SHORT_COMMIT: ${{ steps.restore.outputs.short-commit }}
+        run: |
+          echo "Short commit: ${STEPS_BUILD_OUTPUTS_SHORT_COMMIT}"
+          if [[ -z "${STEPS_BUILD_OUTPUTS_SHORT_COMMIT}" ]]; then
+            echo "Short commit output is empty"
+            exit 1
+          fi
+
+          # Verify that the restored Neovim nightly matches the pinned commit
+          short="$(printf '%s' "${{ env.NEOVIM_NIGHTLY_COMMIT }}" | cut -c1-7)"
+          if [[ "${STEPS_BUILD_OUTPUTS_SHORT_COMMIT}" != "$short" ]]; then
+            echo "Restored Neovim nightly does not match the pinned commit. Expected: $short, Got: ${STEPS_BUILD_OUTPUTS_SHORT_COMMIT}"
+            exit 1
+          fi
