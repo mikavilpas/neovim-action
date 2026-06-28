@@ -20,6 +20,10 @@ outputs:
   prefix:
     description: "Install prefix of the extracted Neovim (binary at <prefix>/bin/nvim)."
     value: ${{ steps.config.outputs.prefix }}
+  short-commit:
+    description: "Short commit of the extracted Neovim (first 7 characters of the
+      commit hash)."
+    value: ${{ steps.extract.outputs.short-commit }}
 
 runs:
   using: composite
@@ -36,6 +40,7 @@ runs:
         path: ${{ runner.temp }}/neovim-nightly-artifact
 
     - name: Extract pinned Neovim nightly
+      id: extract
       shell: bash
       env:
         NEOVIM_COMMIT: ${{ inputs.commit }}
@@ -52,6 +57,7 @@ runs:
           echo "Extracted Neovim does not report the expected commit $NEOVIM_COMMIT (looked for $short)"
           exit 1
         }
+        echo "short-commit=$short" >> "$GITHUB_OUTPUT"
 
     - name: Add Neovim nightly to PATH
       shell: bash
