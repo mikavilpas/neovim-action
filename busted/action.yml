@@ -45,6 +45,12 @@ inputs:
       but before tests run (e.g. install extra rocks or prepare fixtures)."
     required: false
     default: ""
+  working-directory:
+    description: "Directory to run the 'before' script and `luarocks test` in.
+      Defaults to the workspace root; set it when the project's rockspec lives in
+      a subdirectory."
+    required: false
+    default: "."
 
 runs:
   using: composite
@@ -114,6 +120,7 @@ runs:
     - name: Run 'before' script
       if: inputs.before != ''
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       # Run via env (not inline) so the script cannot be expanded into this
       # action's template, only executed.
       env:
@@ -122,6 +129,7 @@ runs:
 
     - name: Run Busted tests
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
         LUAROCKS_ARGS: ${{ inputs.luarocks_args }}
       run: |
