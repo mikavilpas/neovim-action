@@ -110,6 +110,7 @@ jobs:
         uses: ./busted
         with:
           working-directory: busted/test-fixture
+          strict: "true"
 
   busted-with-neovim-nightly:
     name: Run Busted tests (pinned nightly Neovim)
@@ -129,3 +130,4 @@ jobs:
         uses: ./busted
         with:
           working-directory: busted/test-fixture
+          strict: "true"
