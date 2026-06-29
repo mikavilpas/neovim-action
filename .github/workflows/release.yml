@@ -39,4 +39,4 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: npx semantic-release@${{ env.SEMANTIC_RELEASE_VERSION }}
+        run: pnpx semantic-release@${{ env.SEMANTIC_RELEASE_VERSION }}
