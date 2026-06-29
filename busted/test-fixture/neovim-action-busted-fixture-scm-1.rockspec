@@ -12,6 +12,10 @@ description = {
 }
 dependencies = {
   "lua 5.1",
+  -- A real runtime dependency that busted does NOT pull in, so the spec can
+  -- prove the action installed the project's own rockspec dependencies (not
+  -- just the test framework) before running tests.
+  "inspect",
 }
 test_dependencies = {
   "busted",
