@@ -29,3 +29,20 @@ jobs:
           cache: "pnpm"
       - run: pnpm install
       - run: pnpm oxfmt --check
+
+  stylua:
+    name: stylua
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: JohnnyMorganz/stylua-action@76fd70c03e6340ceaf673366712db9b20560b402 # v5.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # renovate: datasource=github-releases depName=JohnnyMorganz/StyLua
+          version: v2.5.2
+          # CLI arguments
+          args: --color always --check --allow-hidden .

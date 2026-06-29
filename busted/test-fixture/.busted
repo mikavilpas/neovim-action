@@ -1,0 +1,7 @@
+-- Run the busted suite using Neovim as the Lua interpreter (via nlua), so the
+-- tests execute against whatever `nvim` the busted action found on PATH.
+return {
+  default = {
+    lua = "nlua",
+  },
+}

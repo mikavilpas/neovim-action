@@ -91,3 +91,41 @@ jobs:
             echo "Restored Neovim nightly does not match the pinned commit. Expected: $short, Got: ${STEPS_BUILD_OUTPUTS_SHORT_COMMIT}"
             exit 1
           fi
+
+  busted-with-neovim-stable:
+    name: Run Busted tests (stable Neovim)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Install stable Neovim
+        uses: rhysd/action-setup-vim@febef33995d6649302e9d88dda81e071b68f16a7 # v1.6.1
+        with:
+          neovim: true
+          version: stable
+      - name: Run Busted tests against the fixture
+        uses: ./busted
+        with:
+          working-directory: busted/test-fixture
+
+  busted-with-neovim-nightly:
+    name: Run Busted tests (pinned nightly Neovim)
+    runs-on: ubuntu-24.04
+    needs: build-nightly
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Restore pinned Neovim nightly
+        uses: ./restore-nightly
+        with:
+          commit: ${{ env.NEOVIM_NIGHTLY_COMMIT }}
+      - name: Run Busted tests against the fixture
+        uses: ./busted
+        with:
+          working-directory: busted/test-fixture
