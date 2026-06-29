@@ -97,6 +97,8 @@ runs:
         RUNNER_ARCH_NAME: ${{ runner.arch }}
         BUSTED_VERSION: ${{ inputs.busted_version }}
         NLUA_VERSION: ${{ inputs.nlua_version }}
+        INSTALL_DEPS: ${{ inputs.install_dependencies }}
+        WORKING_DIR: ${{ inputs.working-directory }}
       run: |
         # The cache holds compiled C rocks, so every component that identifies
         # the build environment must be present, or a rock could be restored
@@ -122,7 +124,23 @@ runs:
           echo "::warning::${message} Proceeding with a degraded key (strict mode is off)."
         fi
 
-        key="busted-${RUNNER_OS_NAME}-${RUNNER_ARCH_NAME}-${image_version:-unknown}-busted${BUSTED_VERSION}-nlua${NLUA_VERSION}"
+        # Manual salt: bump whenever the action changes what it stores in
+        # ~/.luarocks in a way no other key component captures.
+        cache_version="v2"
+
+        # ~/.luarocks also holds the project's rockspec dependencies, so fold
+        # the rockspec contents into the key. The cache is all-or-nothing (exact
+        # match, no restore-keys)
+        rockspec_hash="none"
+        if [ "$INSTALL_DEPS" = "true" ]; then
+          shopt -s nullglob
+          rockspecs=("${WORKING_DIR}"/*.rockspec)
+          if [ "${#rockspecs[@]}" -gt 0 ]; then
+            rockspec_hash="$(cat "${rockspecs[@]}" | sha256sum | cut -c1-16)"
+          fi
+        fi
+
+        key="busted-${cache_version}-${RUNNER_OS_NAME}-${RUNNER_ARCH_NAME}-${image_version:-unknown}-busted${BUSTED_VERSION}-nlua${NLUA_VERSION}-deps${rockspec_hash}"
         echo "Using cache key: ${key}"
         echo "key=${key}" >> "$GITHUB_OUTPUT"
 
@@ -131,9 +149,6 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.luarocks
-        # Exact match only (no restore-keys): see "Build and validate the cache
-        # key" above — the OS image version and arch are baked into the key so a
-        # restored rock always matches the Lua/libc it was built against.
         key: ${{ steps.cache-key.outputs.key }}
 
     - name: Install busted and nlua
