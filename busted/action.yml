@@ -51,6 +51,13 @@ inputs:
       a subdirectory."
     required: false
     default: "."
+  strict:
+    description: "When 'true', fail the build if the cache key cannot be built
+      from fully-populated components (e.g. the runner does not expose
+      ImageVersion). Off by default so consumers on unusual runners still work;
+      enable it in your own CI to catch a silently-degraded cache key."
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -73,25 +80,53 @@ runs:
         sudo apt-get install --yes --no-install-recommends \
           lua5.1 liblua5.1-0-dev luarocks
 
-    - name: Resolve the runner image version for the cache key
-      id: image
+    - name: Build and validate the cache key
+      id: cache-key
       shell: bash
-      # ImageVersion is a runner-provided OS environment variable; it is NOT
-      # exposed in the `env` expression context, so `${{ env.ImageVersion }}`
-      # would expand to an empty string. Read it in a shell step and pass it
-      # through an output instead. Falls back to "unknown" on self-hosted
-      # runners that do not set it.
-      run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
+      env:
+        STRICT: ${{ inputs.strict }}
+        RUNNER_OS_NAME: ${{ runner.os }}
+        RUNNER_ARCH_NAME: ${{ runner.arch }}
+        BUSTED_VERSION: ${{ inputs.busted_version }}
+        NLUA_VERSION: ${{ inputs.nlua_version }}
+      run: |
+        # The cache holds compiled C rocks, so every component that identifies
+        # the build environment must be present, or a rock could be restored
+        # into an environment it was not built against. ImageVersion is a
+        # runner-provided OS env var that is NOT in the `env` expression
+        # context, which is exactly the kind of silently-empty value this
+        # validation exists to catch.
+        image_version="${ImageVersion:-}"
+
+        missing=""
+        [ -n "$RUNNER_OS_NAME" ]   || missing="${missing} runner.os"
+        [ -n "$RUNNER_ARCH_NAME" ] || missing="${missing} runner.arch"
+        [ -n "$image_version" ]    || missing="${missing} ImageVersion"
+        [ -n "$BUSTED_VERSION" ]   || missing="${missing} busted_version"
+        [ -n "$NLUA_VERSION" ]     || missing="${missing} nlua_version"
+
+        if [ -n "$missing" ]; then
+          message="Cannot build a reliable cache key; empty component(s):${missing}. A cached rock could be restored into an environment it was not built against."
+          if [ "$STRICT" = "true" ]; then
+            echo "::error::${message} (strict mode is on)"
+            exit 1
+          fi
+          echo "::warning::${message} Proceeding with a degraded key (strict mode is off)."
+        fi
+
+        key="busted-${RUNNER_OS_NAME}-${RUNNER_ARCH_NAME}-${image_version:-unknown}-busted${BUSTED_VERSION}-nlua${NLUA_VERSION}"
+        echo "Using cache key: ${key}"
+        echo "key=${key}" >> "$GITHUB_OUTPUT"
 
     - name: Restore cached Busted test harness
       id: cache
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.luarocks
-        # Exact match only (no restore-keys): the cache holds compiled C rocks,
-        # so the OS image version and arch are baked into the key to guarantee a
-        # restored rock matches the Lua/libc it was built against.
-        key: "busted-${{ runner.os }}-${{ runner.arch }}-${{ steps.image.outputs.version }}-busted${{ inputs.busted_version }}-nlua${{ inputs.nlua_version }}"
+        # Exact match only (no restore-keys): see "Build and validate the cache
+        # key" above — the OS image version and arch are baked into the key so a
+        # restored rock always matches the Lua/libc it was built against.
+        key: ${{ steps.cache-key.outputs.key }}
 
     - name: Install busted and nlua
       if: steps.cache.outputs.cache-hit != 'true'
