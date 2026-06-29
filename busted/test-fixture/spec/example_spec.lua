@@ -10,4 +10,16 @@ describe("the busted action", function()
   it("can execute Vimscript through the running Neovim", function()
     assert.are.equal(3, vim.fn.eval("1 + 2"))
   end)
+
+  it(
+    "can load a rockspec runtime dependency installed by the action",
+    function()
+      -- `inspect` is declared in the rockspec's `dependencies` and is not a
+      -- busted dependency, so loading and using it proves the action installed
+      -- the project's own dependencies before running the tests.
+      local inspect = require("inspect")
+      assert.is_not_nil(inspect)
+      assert.are.equal("string", type(inspect({ 1, 2, 3 })))
+    end
+  )
 end)

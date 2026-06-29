@@ -45,6 +45,14 @@ inputs:
       but before tests run (e.g. install extra rocks or prepare fixtures)."
     required: false
     default: ""
+  install_dependencies:
+    description: "Install the project's rockspec dependencies before running
+      tests (via `luarocks make --only-deps`), so a plugin's runtime deps (e.g.
+      plenary.nvim) are loadable. `luarocks test` only provides the test
+      framework, not these. Set to 'false' to manage dependencies yourself (e.g.
+      via the 'before' input)."
+    required: false
+    default: "true"
   working-directory:
     description: "Directory to run the 'before' script and `luarocks test` in.
       Defaults to the workspace root; set it when the project's rockspec lives in
@@ -151,6 +159,24 @@ runs:
           echo "LUA_CPATH=$(luarocks --lua-version 5.1 path --lr-cpath);;"
         } >> "$GITHUB_ENV"
         echo "$HOME/.luarocks/bin" >> "$GITHUB_PATH"
+
+    - name: Install the project's rockspec dependencies
+      if: inputs.install_dependencies == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        # `luarocks test` installs the test framework (busted/nlua) but NOT the
+        # project's own dependencies, so install them from the rockspec.
+        shopt -s nullglob
+        rockspecs=(*.rockspec)
+        if [ "${#rockspecs[@]}" -eq 1 ]; then
+          echo "Installing dependencies from ${rockspecs[0]}"
+          luarocks --lua-version 5.1 make --local --only-deps "${rockspecs[0]}"
+        elif [ "${#rockspecs[@]}" -eq 0 ]; then
+          echo "No rockspec found in $(pwd); skipping project dependency install."
+        else
+          echo "::warning::Found multiple rockspecs (${rockspecs[*]}); skipping automatic dependency install. Install them via the 'before' input or keep a single rockspec."
+        fi
 
     - name: Run 'before' script
       if: inputs.before != ''
