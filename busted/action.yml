@@ -29,13 +29,13 @@ inputs:
       Renovate can track; luarocks resolves the latest revision automatically."
     required: false
     # renovate: datasource=github-releases depName=lunarmodules/busted
-    default: "2.2.0"
+    default: "2.3.0"
   nlua_version:
     description: "Version of nlua to install. nlua runs Busted using Neovim as
       the Lua interpreter. The rockspec revision is omitted (see busted_version)."
     required: false
     # renovate: datasource=git-tags packageName=https://github.com/mfussenegger/nlua
-    default: "0.3.1"
+    default: "0.3.2"
   luarocks_args:
     description: "Extra arguments appended to the `luarocks test` command."
     required: false
