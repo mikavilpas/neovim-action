@@ -1,0 +1,131 @@
+---
+name: "Run Busted tests with Neovim"
+description: >-
+  Run a Neovim plugin's Busted test suite (https://github.com/lunarmodules/busted).
+
+  Requires Neovim to be installed first (e.g. via the companion `build-nightly`
+  / `restore-nightly` actions, or a released version via
+  `rhysd/action-setup-vim`).
+
+  Scope:
+
+  This action is deliberately Neovim-agnostic: it does NOT install Neovim. Put
+  Neovim on PATH first.
+
+  Reliability + speed:
+
+  Lua 5.1 and LuaRocks themselves are installed from the OS package manager
+  (apt) as prebuilt binaries, so the toolchain is never compiled and is always
+  in sync with the runner image. The rocks on top (busted, nlua and their few
+  small C dependencies such as luafilesystem) are compiled from source once on
+  a cache miss, then cached: subsequent runs restore them and skip the build.
+  The cache key includes the OS image version and architecture, so a cached
+  rock can never be restored into an image it was not built against.
+
+inputs:
+  busted_version:
+    description: "Version of busted to install. The luarocks rockspec revision
+      (e.g. '-1') is intentionally omitted so the value stays clean semver that
+      Renovate can track; luarocks resolves the latest revision automatically."
+    required: false
+    # renovate: datasource=github-releases depName=lunarmodules/busted
+    default: "2.2.0"
+  nlua_version:
+    description: "Version of nlua to install. nlua runs Busted using Neovim as
+      the Lua interpreter. The rockspec revision is omitted (see busted_version)."
+    required: false
+    # renovate: datasource=git-tags packageName=https://github.com/mfussenegger/nlua
+    default: "0.3.1"
+  luarocks_args:
+    description: "Extra arguments appended to the `luarocks test` command."
+    required: false
+    default: ""
+  before:
+    description: "Optional shell script to run after the test harness is set up
+      but before tests run (e.g. install extra rocks or prepare fixtures)."
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Verify Neovim is available on PATH
+      shell: bash
+      run: |
+        if ! command -v nvim >/dev/null 2>&1; then
+          echo "::error::nvim was not found on PATH. This action does not install Neovim; provide it first via the build-nightly/restore-nightly actions or rhysd/action-setup-vim."
+          exit 1
+        fi
+        nvim --version
+
+    - name: Install Lua 5.1 and LuaRocks from apt
+      shell: bash
+      # apt binaries are dynamically linked against this exact runner image, so
+      # they stay consistent with it and need no caching or compilation.
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes --no-install-recommends \
+          lua5.1 liblua5.1-0-dev luarocks
+
+    - name: Resolve the runner image version for the cache key
+      id: image
+      shell: bash
+      # ImageVersion is a runner-provided OS environment variable; it is NOT
+      # exposed in the `env` expression context, so `${{ env.ImageVersion }}`
+      # would expand to an empty string. Read it in a shell step and pass it
+      # through an output instead. Falls back to "unknown" on self-hosted
+      # runners that do not set it.
+      run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
+
+    - name: Restore cached Busted test harness
+      id: cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.luarocks
+        # Exact match only (no restore-keys): the cache holds compiled C rocks,
+        # so the OS image version and arch are baked into the key to guarantee a
+        # restored rock matches the Lua/libc it was built against.
+        key: "busted-${{ runner.os }}-${{ runner.arch }}-${{ steps.image.outputs.version }}-busted${{ inputs.busted_version }}-nlua${{ inputs.nlua_version }}"
+
+    - name: Install busted and nlua
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        BUSTED_VERSION: ${{ inputs.busted_version }}
+        NLUA_VERSION: ${{ inputs.nlua_version }}
+      run: |
+        # Target Lua 5.1 explicitly: Neovim's runtime is LuaJIT (5.1 ABI) and
+        # apt's luarocks otherwise defaults to the distro's newer Lua, which
+        # installs rocks into a tree Neovim cannot load.
+        luarocks --lua-version 5.1 install --local busted "$BUSTED_VERSION"
+        luarocks --lua-version 5.1 install --local nlua "$NLUA_VERSION"
+
+    - name: Add LuaRocks to PATH for later steps
+      shell: bash
+      run: | # zizmor: ignore[github-env]
+        # Make busted/nlua and the installed rocks resolvable in the 'before'
+        # and test steps. Trailing ';;' preserves Lua's default search paths.
+        {
+          echo "LUA_PATH=$(luarocks --lua-version 5.1 path --lr-path);;"
+          echo "LUA_CPATH=$(luarocks --lua-version 5.1 path --lr-cpath);;"
+        } >> "$GITHUB_ENV"
+        echo "$HOME/.luarocks/bin" >> "$GITHUB_PATH"
+
+    - name: Run 'before' script
+      if: inputs.before != ''
+      shell: bash
+      # Run via env (not inline) so the script cannot be expanded into this
+      # action's template, only executed.
+      env:
+        BEFORE_SCRIPT: ${{ inputs.before }}
+      run: bash -e -c "$BEFORE_SCRIPT"
+
+    - name: Run Busted tests
+      shell: bash
+      env:
+        LUAROCKS_ARGS: ${{ inputs.luarocks_args }}
+      run: |
+        # Word-splitting of LUAROCKS_ARGS is intentional: it carries multiple
+        # CLI arguments, not a single value.
+        # shellcheck disable=SC2086
+        luarocks --lua-version 5.1 test --local $LUAROCKS_ARGS
