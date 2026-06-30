@@ -1,9 +1,8 @@
 ---
 name: "Restore a previously built pinned Neovim nightly"
 description: >-
-  Download and extract the pinned Neovim nightly artifact published by the
-  companion `build-nightly` action, exposing its install prefix so jobs can use
-  the pinned build without rebuilding it.
+  Download and extract the pinned Neovim nightly artifact published by the companion `build-nightly`
+  action, exposing its install prefix so jobs can use the pinned build without rebuilding it.
 
 inputs:
   artifact-name:
@@ -11,9 +10,10 @@ inputs:
     required: false
     default: neovim-nightly
   commit:
-    description: "The expected https://github.com/neovim/neovim commit. The
-      extracted Neovim is asserted to report this commit, so a mismatched or
-      stale artifact fails loudly instead of being tested silently."
+    description:
+      "The expected https://github.com/neovim/neovim commit. The extracted Neovim is asserted to
+      report this commit, so a mismatched or stale artifact fails loudly instead of being tested
+      silently."
     required: true
 
 outputs:
@@ -21,8 +21,7 @@ outputs:
     description: "Install prefix of the extracted Neovim (binary at <prefix>/bin/nvim)."
     value: ${{ steps.config.outputs.prefix }}
   short-commit:
-    description: "Short commit of the extracted Neovim (first 7 characters of the
-      commit hash)."
+    description: "Short commit of the extracted Neovim (first 7 characters of the commit hash)."
     value: ${{ steps.extract.outputs.short-commit }}
 
 runs:

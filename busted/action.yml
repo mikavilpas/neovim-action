@@ -3,36 +3,35 @@ name: "Run Busted tests with Neovim"
 description: >-
   Run a Neovim plugin's Busted test suite (https://github.com/lunarmodules/busted).
 
-  Requires Neovim to be installed first (e.g. via the companion `build-nightly`
-  / `restore-nightly` actions, or a released version via
-  `rhysd/action-setup-vim`).
+  Requires Neovim to be installed first (e.g. via the companion `build-nightly` / `restore-nightly`
+  actions, or a released version via `rhysd/action-setup-vim`).
 
   Scope:
 
-  This action is deliberately Neovim-agnostic: it does NOT install Neovim. Put
-  Neovim on PATH first.
+  This action is deliberately Neovim-agnostic: it does NOT install Neovim. Put Neovim on PATH first.
 
   Reliability + speed:
 
-  Lua 5.1 and LuaRocks themselves are installed from the OS package manager
-  (apt) as prebuilt binaries, so the toolchain is never compiled and is always
-  in sync with the runner image. The rocks on top (busted, nlua and their few
-  small C dependencies such as luafilesystem) are compiled from source once on
-  a cache miss, then cached: subsequent runs restore them and skip the build.
-  The cache key includes the OS image version and architecture, so a cached
-  rock can never be restored into an image it was not built against.
+  Lua 5.1 and LuaRocks themselves are installed from the OS package manager (apt) as prebuilt
+  binaries, so the toolchain is never compiled and is always in sync with the runner image. The
+  rocks on top (busted, nlua and their few small C dependencies such as luafilesystem) are compiled
+  from source once on a cache miss, then cached: subsequent runs restore them and skip the build.
+  The cache key includes the OS image version and architecture, so a cached rock can never be
+  restored into an image it was not built against.
 
 inputs:
   busted_version:
-    description: "Version of busted to install. The luarocks rockspec revision
-      (e.g. '-1') is intentionally omitted so the value stays clean semver that
-      Renovate can track; luarocks resolves the latest revision automatically."
+    description:
+      "Version of busted to install. The luarocks rockspec revision (e.g. '-1') is intentionally
+      omitted so the value stays clean semver that Renovate can track; luarocks resolves the latest
+      revision automatically."
     required: false
     # renovate: datasource=github-releases depName=lunarmodules/busted
     default: "2.3.0"
   nlua_version:
-    description: "Version of nlua to install. nlua runs Busted using Neovim as
-      the Lua interpreter. The rockspec revision is omitted (see busted_version)."
+    description:
+      "Version of nlua to install. nlua runs Busted using Neovim as the Lua interpreter. The
+      rockspec revision is omitted (see busted_version)."
     required: false
     # renovate: datasource=git-tags packageName=https://github.com/mfussenegger/nlua
     default: "0.3.2"
@@ -41,29 +40,30 @@ inputs:
     required: false
     default: ""
   before:
-    description: "Optional shell script to run after the test harness is set up
-      but before tests run (e.g. install extra rocks or prepare fixtures)."
+    description:
+      "Optional shell script to run after the test harness is set up but before tests run (e.g.
+      install extra rocks or prepare fixtures)."
     required: false
     default: ""
   install_dependencies:
-    description: "Install the project's rockspec dependencies before running
-      tests (via `luarocks make --only-deps`), so a plugin's runtime deps (e.g.
-      plenary.nvim) are loadable. `luarocks test` only provides the test
-      framework, not these. Set to 'false' to manage dependencies yourself (e.g.
-      via the 'before' input)."
+    description:
+      "Install the project's rockspec dependencies before running tests (via `luarocks make
+      --only-deps`), so a plugin's runtime deps (e.g. plenary.nvim) are loadable. `luarocks test`
+      only provides the test framework, not these. Set to 'false' to manage dependencies yourself
+      (e.g. via the 'before' input)."
     required: false
     default: "true"
   working-directory:
-    description: "Directory to run the 'before' script and `luarocks test` in.
-      Defaults to the workspace root; set it when the project's rockspec lives in
-      a subdirectory."
+    description:
+      "Directory to run the 'before' script and `luarocks test` in. Defaults to the workspace root;
+      set it when the project's rockspec lives in a subdirectory."
     required: false
     default: "."
   strict:
-    description: "When 'true', fail the build if the cache key cannot be built
-      from fully-populated components (e.g. the runner does not expose
-      ImageVersion). Off by default so consumers on unusual runners still work;
-      enable it in your own CI to catch a silently-degraded cache key."
+    description:
+      "When 'true', fail the build if the cache key cannot be built from fully-populated components
+      (e.g. the runner does not expose ImageVersion). Off by default so consumers on unusual runners
+      still work; enable it in your own CI to catch a silently-degraded cache key."
     required: false
     default: "false"
 
