@@ -1,5 +1,5 @@
 ---
-name: Run tests
+name: CI checks
 on:
   pull_request: ~
   push:
@@ -17,8 +17,13 @@ jobs:
   # Build the pinned Neovim nightly once (cached by commit) and publish it as an
   # artifact, instead of rebuilding it in every matrix job on a cache miss.
   build-nightly:
-    name: Build pinned Neovim nightly
-    runs-on: ubuntu-24.04
+    name: Build pinned Neovim nightly (${{ matrix.runner }})
+    strategy:
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
     steps:
@@ -55,8 +60,13 @@ jobs:
           fi
 
   restore-nightly:
-    name: Restore previously built Neovim nightly
-    runs-on: ubuntu-24.04
+    name: Restore previously built Neovim nightly (${{ matrix.runner }})
+    strategy:
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     needs: build-nightly
     permissions:
       contents: read
@@ -93,8 +103,13 @@ jobs:
           fi
 
   busted-with-neovim-stable:
-    name: Run Busted tests (stable Neovim)
-    runs-on: ubuntu-24.04
+    name: Run Busted tests (stable Neovim, ${{ matrix.runner }})
+    strategy:
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
     steps:
@@ -113,8 +128,13 @@ jobs:
           strict: "true"
 
   busted-with-neovim-nightly:
-    name: Run Busted tests (pinned nightly Neovim)
-    runs-on: ubuntu-24.04
+    name: Run Busted tests (pinned nightly Neovim, ${{ matrix.runner }})
+    strategy:
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     needs: build-nightly
     permissions:
       contents: read
@@ -131,3 +151,26 @@ jobs:
         with:
           working-directory: busted/test-fixture
           strict: "true"
+
+  ci:
+    name: ci
+    if: ${{ always() }}
+    needs:
+      - build-nightly
+      - restore-nightly
+      - busted-with-neovim-stable
+      - busted-with-neovim-nightly
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Verify all required jobs succeeded
+        if: >-
+          ${{
+            contains(needs.*.result, 'failure')
+            || contains(needs.*.result, 'cancelled')
+            || contains(needs.*.result, 'skipped')
+          }}
+        run: |
+          echo "One or more required jobs did not succeed."
+          exit 1

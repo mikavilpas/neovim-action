@@ -13,6 +13,17 @@ The principles I used to build them:
     [mikavilpas/mika-renovate](https://github.com/mikavilpas/mika-renovate) for my custom managers
     (also free to use).
 
+## CI Runner Architecture support
+
+Supported operating systems and architectures for all actions:
+
+- [`ubuntu-24.04`](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md)
+  (x86_64)
+- [`ubuntu-24.04-arm`](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Arm64-Readme.md)
+  (arm64)
+
+Everything is tested on both architectures to maintain compatibility.
+
 ## [build-nightly](build-nightly/action.yml) and [restore-nightly](restore-nightly/action.yml) Neovim versions
 
 [build-nightly](build-nightly/action.yml) compiles and caches a Neovim nightly based on its git
