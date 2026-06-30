@@ -36,10 +36,15 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Resolve install prefix
+    - name: Resolve install prefix and artifact name
       id: config
       shell: bash
-      run: echo "prefix=${{ runner.temp }}/neovim-nightly" >> "$GITHUB_OUTPUT"
+      env:
+        ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        RUNNER_ARCH: ${{ runner.arch }}
+      run: |
+        echo "prefix=${{ runner.temp }}/neovim-nightly" >> "$GITHUB_OUTPUT"
+        echo "artifact-name=${ARTIFACT_NAME}-${RUNNER_ARCH}" >> "$GITHUB_OUTPUT"
 
     - name: Restore cached Neovim nightly if it already exists
       id: cache
@@ -106,6 +111,6 @@ runs:
     - name: Upload Neovim nightly artifact
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
-        name: ${{ inputs.artifact-name }}
+        name: ${{ steps.config.outputs.artifact-name }}
         path: neovim-nightly.tar.gz
         retention-days: 1
