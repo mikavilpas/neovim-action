@@ -24,6 +24,7 @@ disable = ["MD013", "MD033"]
 #    "src/**/*.md",
 #    "README.md"
 # ]
+line-length = 120
 
 # List of file/directory patterns to exclude from linting
 exclude = [
