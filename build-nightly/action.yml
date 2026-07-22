@@ -3,18 +3,17 @@ name: "Build pinned Neovim nightly"
 description: >-
   Issue:
 
-  Neovim only ever publishes nightly under a single moving `nightly` tag whose old assets are
-  deleted, so it can't be pinned by tag.
+  Neovim only ever publishes nightly under a single moving `nightly` tag whose old assets are deleted, so it can't be
+  pinned by tag.
 
   Solution:
 
-  Build a specific Neovim commit from source (cached by commit) so the nightly version is locked and
-  cannot drift between CI runs. Renovate can be used to bump the nightly commit in a controlled
-  manner, allowing for reproducible builds.
+  Build a specific Neovim commit from source (cached by commit) so the nightly version is locked and cannot drift
+  between CI runs. Renovate can be used to bump the nightly commit in a controlled manner, allowing for reproducible
+  builds.
 
-  This action builds the pinned nightly once and uploads it as a workflow artifact. Use the
-  companion `restore-nightly` action to download and extract it in jobs that need it, instead of
-  rebuilding it on a cache miss.
+  This action builds the pinned nightly once and uploads it as a workflow artifact. Use the companion `restore-nightly`
+  action to download and extract it in jobs that need it, instead of rebuilding it on a cache miss.
 
 inputs:
   commit:
