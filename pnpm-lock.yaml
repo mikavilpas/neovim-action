@@ -208,18 +208,18 @@ importers:
   .:
     devDependencies:
       '@mikavilpas/oxfmt-config':
-        specifier: 3.0.2
-        version: 3.0.2(oxfmt@0.61.0)
+        specifier: 3.0.3
+        version: 3.0.3(oxfmt@0.61.0)
       oxfmt:
         specifier: 0.61.0
         version: 0.61.0
 
 packages:
 
-  '@mikavilpas/oxfmt-config@3.0.2':
-    resolution: {integrity: sha512-EN31oQttxjYzs31S3wwnyS+aS3DkSwHXPYP1Qx0DDWa7BGUbxmIFAQr6IdJNIIMv4qN6gT9doyN2ZIoGGC7z0Q==}
+  '@mikavilpas/oxfmt-config@3.0.3':
+    resolution: {integrity: sha512-dnApUBbQOz/MWYsU6I3zSO6ZgW02WIplMkBMGJdtMAP+MK9sFrk1rZI9t30hQMTgL7E6/sKZ3xy8sRNelss8tw==}
     peerDependencies:
-      oxfmt: ^0.59.0
+      oxfmt: '>=0.59.0'
 
   '@oxfmt/binding-android-arm-eabi@0.61.0':
     resolution: {integrity: sha512-BaS+1OVvg9sr+Xav0+KdWedQRcAzrdoEcwMZeqoc2F6ieC1s/t5eM35YQoRPQ7vAqkZ+p3tbQb1r9I9mrV5oGA==}
@@ -362,7 +362,7 @@ packages:
 
 snapshots:
 
-  '@mikavilpas/oxfmt-config@3.0.2(oxfmt@0.61.0)':
+  '@mikavilpas/oxfmt-config@3.0.3(oxfmt@0.61.0)':
     dependencies:
       oxfmt: 0.61.0
 
