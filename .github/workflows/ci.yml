@@ -31,7 +31,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Build pinned Neovim nightly
-        uses: ./build-nightly
+        uses: $/build-nightly
         id: build
         with:
           commit: ${{ env.NEOVIM_NIGHTLY_COMMIT }}
@@ -78,7 +78,7 @@ jobs:
           persist-credentials: false
       - name: Restore pinned Neovim nightly
         id: restore
-        uses: ./restore-nightly
+        uses: $/restore-nightly
         with:
           commit: ${{ env.NEOVIM_NIGHTLY_COMMIT }}
       - name: Show Neovim version
@@ -122,7 +122,7 @@ jobs:
           neovim: true
           version: stable
       - name: Run Busted tests against the fixture
-        uses: ./busted
+        uses: $/busted
         with:
           working-directory: busted/test-fixture
           strict: "true"
@@ -143,11 +143,11 @@ jobs:
         with:
           persist-credentials: false
       - name: Restore pinned Neovim nightly
-        uses: ./restore-nightly
+        uses: $/restore-nightly
         with:
           commit: ${{ env.NEOVIM_NIGHTLY_COMMIT }}
       - name: Run Busted tests against the fixture
-        uses: ./busted
+        uses: $/busted
         with:
           working-directory: busted/test-fixture
           strict: "true"
