@@ -12,12 +12,12 @@
   },
   "devDependencies": {
     "@mikavilpas/oxfmt-config": "3.0.3",
-    "oxfmt": "0.72.0"
+    "oxfmt": "0.73.0"
   },
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
-      "version": "12.11.2",
+      "version": "12.13.0",
       "onFail": "download"
     }
   }
