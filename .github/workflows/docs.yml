@@ -4,4 +4,4 @@ permissions:
   contents: read
 jobs:
   check-links:
-    uses: mikavilpas/dotfiles/.github/workflows/docs.yml@bc56c739c70e39508d2560b3aaafa3ce662ff3d7 # main
+    uses: mikavilpas/dotfiles/.github/workflows/docs.yml@1ae445770da09fc502b1dc9a7b356561a13e441f # main
